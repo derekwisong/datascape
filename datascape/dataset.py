@@ -9,6 +9,22 @@ import pyarrow as pa
 import pyarrow.dataset as ds
 
 
+TYPE_STRING = "string"
+TYPE_INT64 = "int64"
+TYPE_INT32 = "int32"
+TYPE_DOUBLE = "float64"
+
+
+def to_pyarrow_type(type_name: str) -> pa.DataType:
+    """Convert a type name to a pyarrow type."""
+    return {
+        TYPE_STRING: pa.string(),
+        TYPE_INT64: pa.int64(),
+        TYPE_INT32: pa.int32(),
+        TYPE_DOUBLE: pa.float64()
+    }[type_name]
+
+
 class Dataset:
     """A dataset.
 
@@ -21,7 +37,7 @@ class Dataset:
                  *,
                  partition_on: List[Tuple[str, Any] | str] = None,
                  partition_flavor: str = "hive",
-                 schema: pa.Schema = None
+                 schema: List[Tuple[str, str]] = None
                  ) -> None:
         """Initialize a Dataset object.
 
@@ -30,7 +46,7 @@ class Dataset:
             partition_on: (optional). List of field names to partition on.
         """
         self.location = location
-        self.schema = schema
+        self.schema = pa.schema([(f, to_pyarrow_type(t)) for f, t in schema]) if schema else None
         self.partitioning = ds.partitioning(
             self._fields_to_schema(partition_on),
             flavor=partition_flavor) if partition_on else None
@@ -63,6 +79,7 @@ class Dataset:
             schema=self.dataset.schema,
             format=self.dataset.format,
             partitioning=self.partitioning,
+            existing_data_behavior="overwrite_or_ignore",
             basename_template=self._get_filename_template())
         self._init_dataset()
 
