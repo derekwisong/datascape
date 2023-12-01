@@ -9,7 +9,7 @@ import datascape.dataset as dsds
 def test_init_dataset():
     """Test Dataset initialization."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        dataset = dsds.Dataset(tmpdir)
+        dataset = dsds.ArrowDataset(tmpdir)
         assert dataset.location == tmpdir
 
 
@@ -21,7 +21,7 @@ def test_filename_template():
     expected = f"part-{timestamp.strftime('%Y%m%dT%H%M%S')}.{remaining_nanos}-{{i}}.parquet"
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        dataset = dsds.Dataset(tmpdir)
+        dataset = dsds.ArrowDataset(tmpdir)
         assert dataset._get_filename_template(nanos_epoch=nanos) == expected
 
 
@@ -38,7 +38,7 @@ def test_append_records_to_empty():
         dict(part="a", name="Baz", value=3)]
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        dataset = dsds.Dataset(tmpdir, partition_on=["part"], schema=schema)
+        dataset = dsds.ArrowDataset(tmpdir, partition_on=["part"], schema=schema)
         dataset.append_records(records)
         assert dataset.count_rows() == len(records)
 
@@ -56,9 +56,9 @@ def test_append_records_to_existing():
         dict(part="a", name="Baz", value=3)]
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        dataset = dsds.Dataset(tmpdir, partition_on=["part"], schema=schema)
+        dataset = dsds.ArrowDataset(tmpdir, partition_on=["part"], schema=schema)
         dataset.append_records(records)
 
-        dataset = dsds.Dataset(tmpdir, partition_on=["part"], schema=schema)
+        dataset = dsds.ArrowDataset(tmpdir, partition_on=["part"], schema=schema)
         dataset.append_records(records)
         assert dataset.count_rows() == len(records) * 2

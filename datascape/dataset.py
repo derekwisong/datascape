@@ -25,8 +25,8 @@ def to_pyarrow_type(type_name: str) -> pa.DataType:
     }[type_name]
 
 
-class Dataset:
-    """A dataset.
+class ArrowDataset:
+    """A wrapper around a pyarrow dataset.
 
     Attributes:
         dataset (ds.Dataset): The underlying dataset.
@@ -45,6 +45,8 @@ class Dataset:
             location: The location of the dataset.
             partition_on: (optional). List of field names to partition on.
         """
+        # TODO if the location doesn't exist yet a schema and partition scheme must be provided
+        # TODO if location exists, scheman and partition scheme should be inferred (or provided)
         self.location = location
         self.schema = pa.schema([(f, to_pyarrow_type(t)) for f, t in schema]) if schema else None
         self.partitioning = ds.partitioning(
@@ -72,7 +74,7 @@ class Dataset:
         remaining_nanos = nanos % 1_000_000_000
         return f"part-{timestamp.strftime('%Y%m%dT%H%M%S')}.{remaining_nanos}-{{i}}.parquet"
 
-    def append_records(self, records: Iterable[Any]) -> None:
+    def append_records(self, records: List[Any]) -> None:
         ds.write_dataset(
             pa.RecordBatch.from_pylist(records),
             self.location,
